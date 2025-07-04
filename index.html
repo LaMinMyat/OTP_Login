@@ -1,79 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stylish Login</title>
+  <title>Secure Login</title>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #667eea, #764ba2);
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100vh;
     }
-
     .login-box {
-      background-color: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      text-align: center;
-      width: 300px;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
     }
-
-    .login-box h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    .login-box input {
+    input {
+      display: block;
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
+      padding: 10px;
+      margin-top: 10px;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 5px;
     }
-
-    .login-box button {
+    button {
+      margin-top: 15px;
+      padding: 10px;
       width: 100%;
-      padding: 12px;
-      background-color: #667eea;
+      background: #4CAF50;
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .login-box button:hover {
-      background-color: #5a67d8;
-    }
-
-    #status {
-      margin-top: 10px;
-      color: #555;
-      font-size: 14px;
+      border-radius: 5px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-
   <div class="login-box">
     <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
     <button onclick="login()">Login</button>
-    <p id="status"></p>
   </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -85,74 +61,31 @@
       messagingSenderId: "889579746289",
       appId: "1:889579746289:web:3bb1585147b21410eb8a50"
     };
-
     firebase.initializeApp(firebaseConfig);
 
-    async function hashPassword(password) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return hashHex;
-    }
+    const redirectURL = atob("aHR0cHM6Ly9sYW1pbm15YXQuZ2l0aHViLmlvL09zMS8="); // encoded redirect
 
-    async function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const status = document.getElementById("status");
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = sha256(document.getElementById("password").value); // Hash password
 
-      if (!username || !password) {
-        status.innerText = "Please fill in both fields.";
-        return;
-      }
-
-      status.innerText = "🔄 Logging in...";
-
-      const hashedPassword = await hashPassword(password);
       const userRef = firebase.database().ref("users/" + username);
-
       userRef.once("value").then(snapshot => {
-        status.innerText = "";
-
         if (snapshot.exists()) {
-          const storedHashedPassword = snapshot.val().password;
-          if (storedHashedPassword === hashedPassword) {
-            // ✅ Save login
-            localStorage.setItem("loggedInUser", username);
-            localStorage.setItem("hashedPassword", hashedPassword);
-
-            window.location.href = "https://www.google.com";
+          const storedPassword = snapshot.val().password;
+          if (storedPassword === password) {
+            localStorage.setItem("auth_user", username);
+            window.location.href = redirectURL;
           } else {
-            status.innerText = "❌ Incorrect password.";
+            alert("Wrong password!");
           }
         } else {
-          status.innerText = "❌ User not found.";
+          alert("User not found!");
         }
       }).catch(error => {
-        status.innerText = "❌ Firebase Error: " + error.message;
+        alert("Error: " + error.message);
       });
     }
-
-    // 🔁 Auto login if already saved
-    window.addEventListener('load', async () => {
-      const username = localStorage.getItem("loggedInUser");
-      const hashedPassword = localStorage.getItem("hashedPassword");
-
-      if (username && hashedPassword) {
-        const userRef = firebase.database().ref("users/" + username);
-        const snapshot = await userRef.once("value");
-
-        if (snapshot.exists()) {
-          const storedHashedPassword = snapshot.val().password;
-          if (storedHashedPassword === hashedPassword) {
-            // ✅ Auto login
-            window.location.href = "https://www.google.com";
-          }
-        }
-      }
-    });
   </script>
 </body>
-    </html>
-    
+</html>

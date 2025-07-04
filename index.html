@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Username/Password Login</title>
+  <title>Username Login</title>
 </head>
 <body>
   <h2>Login Form</h2>
@@ -10,7 +9,6 @@
   <input type="password" id="password" placeholder="Password"><br><br>
   <button onclick="login()">Login</button>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -18,18 +16,17 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAoAYbQdPkSQ13WvPUks4SXNQWRlptCUDI",
       authDomain: "otplogin-9a59f.firebaseapp.com",
-      databaseURL: "https://otplogin-9a59f.firebaseio.com",
+      databaseURL: "https://otplogin-9a59f-default-rtdb.firebaseio.com",
       projectId: "otplogin-9a59f",
       storageBucket: "otplogin-9a59f.appspot.com",
       messagingSenderId: "889579746289",
       appId: "1:889579746289:web:3bb1585147b21410eb8a50"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
     function login() {
-      const username = document.getElementById("username").value;
+      const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
 
       const userRef = firebase.database().ref("users/" + username);
@@ -37,17 +34,17 @@
       userRef.once("value").then(snapshot => {
         if (snapshot.exists()) {
           const storedPassword = snapshot.val().password;
-          if (password === storedPassword) {
-            alert("Login success!");
+          if (storedPassword === password) {
+            alert("Login success");
             window.location.href = "https://www.google.com";
           } else {
-            alert("Wrong password!");
+            alert("Wrong password");
           }
         } else {
-          alert("User not found!");
+          alert("User not found");
         }
       }).catch(error => {
-        alert("Error:You cannot login " + error.message);
+        alert("Firebase Error: " + error.message);
       });
     }
   </script>

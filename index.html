@@ -1,65 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>OTP Login</title>
+  <meta charset="UTF-8" />
+  <title>Username/Password Login</title>
 </head>
 <body>
-  <h2>Login with Phone</h2>
-  <input type="text" id="phoneNumber" placeholder="+959123456789"><br><br>
-  <div id="recaptcha-container"></div><br>
-  <button onclick="sendOTP()">Send OTP</button><br><br>
-
-  <input type="text" id="otp" placeholder="Enter OTP"><br>
-  <button onclick="verifyOTP()">Verify OTP</button>
+  <h2>Login Form</h2>
+  <input type="text" id="username" placeholder="Username"><br><br>
+  <input type="password" id="password" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAoAYbQdPkSQ13WvPUks4SXNQWRlptCUDI",
       authDomain: "otplogin-9a59f.firebaseapp.com",
+      databaseURL: "https://otplogin-9a59f.firebaseio.com",
       projectId: "otplogin-9a59f",
       storageBucket: "otplogin-9a59f.appspot.com",
       messagingSenderId: "889579746289",
       appId: "1:889579746289:web:3bb1585147b21410eb8a50"
     };
+
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-  </script>
 
-  <script>
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-      size: 'normal',
-      callback: (response) => {
-        console.log("reCAPTCHA Verified");
-      }
-    });
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
 
-    function sendOTP() {
-      const phone = document.getElementById('phoneNumber').value;
-      const appVerifier = window.recaptchaVerifier;
+      const userRef = firebase.database().ref("users/" + username);
 
-      firebase.auth().signInWithPhoneNumber(phone, appVerifier)
-        .then((confirmationResult) => {
-          window.confirmationResult = confirmationResult;
-          alert("OTP Sent Successfully!");
-        })
-        .catch((error) => {
-          alert("Error sending OTP: " + error.message);
-        });
-    }
-
-    function verifyOTP() {
-      const otp = document.getElementById('otp').value;
-      window.confirmationResult.confirm(otp)
-        .then((result) => {
-          const user = result.user;
-          alert("Login success: " + user.phoneNumber);
-        })
-        .catch((error) => {
-          alert("Invalid OTP");
-        });
+      userRef.once("value").then(snapshot => {
+        if (snapshot.exists()) {
+          const storedPassword = snapshot.val().password;
+          if (password === storedPassword) {
+            alert("Login success!");
+            window.location.href = "https://www.google.com";
+          } else {
+            alert("Wrong password!");
+          }
+        } else {
+          alert("User not found!");
+        }
+      }).catch(error => {
+        alert("Error:You cannot login " + error.message);
+      });
     }
   </script>
 </body>

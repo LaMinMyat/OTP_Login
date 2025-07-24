@@ -1,91 +1,534 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Secure Login</title>
+  <title>YZN Slot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f3f3;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
       display: flex;
-      justify-content: center;
+      background-image: url('back.jpeg');
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    .header {
+      padding-top: 1px;
+      width: 100vw;
+      height: 60px;
+      display:flex;
+      background-size: cover;
+      background-position: center;
+      color: gold;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 60px;
+      text-shadow: 2px 2px 5px #000;
+    }
+    .balance {
+      width:20vw;
+      height:60px;
+      margin-left:1vw;
+      background-image: url('text.png');
+      background-size: cover;
+      background-position: center;
+    }
+    canvas {
+      margin-top: 10px;
+      background: transparent;
+      border: 5px solid gold;
+      border-radius: 12px;
+      box-shadow: 0 0 20px gold;
+      width: 69vw;
+      height: 65vh;
+      display: block;
+    }
+    .bar {
+      display: flex;
+      height:100px;
+      width: 90vw;
+      justify-content: space-between;
+      margin-top: 10px;
     }
     input {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-      background: #4CAF50;
-      color: white;
+      background-image: url('text.png');
+      background-size: cover;
+      background-position: center;
       border: none;
-      border-radius: 5px;
-      font-weight: bold;
+      width: 200px;
+      height: 120px;
+      font-size: 27px;
+      color: white;
+      text-align: center;
+      text-shadow: 1px 1px 3px #000;
+      outline: none;
+    }
+    input[readonly] {
+      background-color: rgba(255, 255, 255, 0.2);
+      cursor: default;
+    }
+    .betting {
+      display: flex;
+      width:30vw;
+      align-items: center;
+    }
+    #minus, #plus {
+      width: 80px;
+      height: 80px;
+      border-radius: 50px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 28px;
+      text-shadow: 1px 1px 3px #000;
+      border: none;
+    }
+    .winAmount,.bet {
+      width:20vw;
+      height:60px;
+      margin-left:vw;
+      background-image: url('text.png');
+      background-size: cover;
+      background-position: center;
+    }
+    #spinBtn {
+      width: 120px;
+      height: 70px;
+      background-image: url('Spin.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: none;
+      color: white;
+      text-shadow: 1px 1px 3px #000;
+    }
+    .rotateBtn {
+      width: 120px;
+      height: 60px;
+      background: gold;
+      color: black;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+    }
+  #gifContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: none;
+  pointer-events: none;
+    }
+
+    #gifContainer img {
+      width: 800px; /* သင်လိုချင်တဲ့ size သတ်မှတ်နိုင်တယ် */
+      height:500px;
+      border-radius: 70px;
+      border:10px solid gold;
+      
+      
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
+  <div class="header">
+    Balance:<input type="number" class="balance" id="balance" value="30000" readonly>
+    Scalter:<input type="number" class="balance" id="scalter" value="0" readonly>
+    Scalter Win:<input type="number" class="balance" id="scalterWin" value="0" readonly>
+  </div>
+  <div style="position: relative; width: 70vw; height: 65vh;">
+  <canvas id="slotCanvas"></canvas>
+  <div id="gifContainer">
+    <img src="wild.gif" alt="Transparent Gif">
+  </div>
+</div>
+
+  <div class="bar">
+    <button id="minus">-</button>
+    <input type="number" class="bet" id="bet" value="100" readonly>
+    <button id="plus">+</button>
+    <input type="number" class="winAmount" id="winAmount" value="0" readonly>
+    Buy<input type="number" class="balance" id="scalter"value="0" readonly>
+    <button class="animate" id="spinBtn">Spin</button>
+    <button class="rotateBtn" onclick="goFullAndLandscape()">📱 Rotate</button>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js"></script>
-
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAoAYbQdPkSQ13WvPUks4SXNQWRlptCUDI",
-      authDomain: "otplogin-9a59f.firebaseapp.com",
-      databaseURL: "https://otplogin-9a59f-default-rtdb.firebaseio.com",
-      projectId: "otplogin-9a59f",
-      storageBucket: "otplogin-9a59f.appspot.com",
-      messagingSenderId: "889579746289",
-      appId: "1:889579746289:web:3bb1585147b21410eb8a50"
-    };
-    firebase.initializeApp(firebaseConfig);
+  
+  
+    const canvas = document.getElementById("slotCanvas");
+    const ctx = canvas.getContext("2d");
 
-    const redirectURL = atob("aHR0cHM6Ly9sYW1pbm15YXQuZ2l0aHViLmlvL09zMS8="); // encoded redirect
+    const SPRITE_WIDTH = 200;
+    const SPRITE_HEIGHT = 100;
+    const symbolsPerReel = 24;
+    const visibleCount = 4;
+    const reelCount = 5;
+    const reelGap = 10;
+    const sprite = new Image();
+    sprite.src = "spritesheet.png";
 
-    function login() {
-      const username = document.getElementById("username").value;
-      const password = sha256(document.getElementById("password").value); // Hash password
-
-      const userRef = firebase.database().ref("users/" + username);
-      userRef.once("value").then(snapshot => {
-        if (snapshot.exists()) {
-          const storedPassword = snapshot.val().password;
-          if (storedPassword === password) {
-            localStorage.setItem("auth_user", username);
-            window.location.href = redirectURL;
-          } else {
-            alert("Wrong password!");
-          }
-        } else {
-          alert("User not found!");
-        }
-      }).catch(error => {
-        alert("Error: " + error.message);
-      });
+    let symbolSize = 100;
+    let reels = [];
+    const spinBtn = document.getElementById("spinBtn");
+  
+  // 🎯 Bet < 100 ⇒ Disable Spin Button
+    function updateSpinButtonState() {
+      const bet = parseInt(document.getElementById("bet").value) || 0;
+      const spinBtn = document.getElementById("spinBtn");
+      spinBtn.disabled = bet < 100;
     }
+
+  
+    function resizeCanvas() {
+      const width = window.innerWidth;
+      const height = window.innerHeight * 0.7;
+      symbolSize = Math.floor(Math.min(width / reelCount, height / visibleCount));
+      canvas.width = symbolSize * reelCount + reelGap * (reelCount - 1);
+      canvas.height = symbolSize * visibleCount;
+    }
+
+    function shuffleWithTailPriority() {
+      const base = [...Array(20).keys()].map(i => i + 1);
+      const tail = [21, 22, 23, 24];
+      const result = [];
+      
+      // ⛔ Prevent symbol 22 during auto-spin
+    let isAutoSpin = false;
+
+      if (!isAutoSpin) {
+        // ✅ Only add 22 during manual spins
+        for (let i = 0; i < 2; i++) {
+          const insertAt = Math.floor(Math.random() * (result.length + 1));
+          result.splice(insertAt, 0, 22);
+        }
+      }
+ 
+      while (base.length > 0) {
+        const i = Math.floor(Math.random() * base.length);
+        result.push(base.splice(i, 1)[0]);
+      }
+      const insertAt = Math.floor(Math.random() * 3);
+      for (let i = 0; i < tail.length; i++) {
+        result.splice(insertAt + i, 0, tail[i]);
+      }
+      return result;
+    }
+
+    function initReels() {
+      reels = [];
+      for (let i = 0; i < reelCount; i++) {
+        const order = shuffleWithTailPriority();
+        reels.push({ order, offset: 0, spinStart: 0, spinDuration: 0, scrollPx: 0, spinning: false });
+      }
+    }
+
+    document.getElementById("plus").onclick = () => {
+      const betInput = document.querySelector(".bet");
+      let currentValue = parseInt(betInput.value) || 0;
+      betInput.value = currentValue + 100;
+      updateSpinButtonState();
+    };
+
+    document.getElementById("minus").onclick = () => {
+      const betInput = document.querySelector(".bet");
+      let currentValue = parseInt(betInput.value) || 0;
+      if (currentValue > 0) betInput.value = currentValue - 100;
+      updateSpinButtonState();
+    };
+let scatterAnimTime = 0; // Global scatter animation timer
+
+function drawReels() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  reels.forEach((reel, r) => {
+    const x = r * (symbolSize + reelGap);
+    const scrollOffset = reel.scrollPx % (symbolSize * symbolsPerReel);
+
+    for (let i = 0; i <= symbolsPerReel; i++) {
+      const index = (reel.offset + i) % symbolsPerReel;
+      const symbolId = reel.order[index];
+      const sy = symbolId * SPRITE_HEIGHT;
+      let dy = i * symbolSize - scrollOffset;
+
+      const isVisible = i >= 0 && i < visibleCount;
+      let bounceOffset = 0;
+
+      if (symbolId === 22 && isVisible) {
+        // 🟡 Add bounce animation
+        bounceOffset = Math.sin(scatterAnimTime / 150) * 12 - 10;
+        dy += bounceOffset;
+
+        // ✨ Glow effect
+        ctx.shadowColor = "gold";
+        ctx.shadowBlur = 30;
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.drawImage(sprite, 0, sy, SPRITE_WIDTH, SPRITE_HEIGHT, x, dy, symbolSize, symbolSize);
+    }
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'gold';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, 0, symbolSize, symbolSize * visibleCount);
+  });
+}
+
+    function easeOutQuad(t) {
+      return t * (2 - t);
+    }
+
+    function spin() {
+      
+        
+      document.getElementById("winAmount").value = 0;
+      const bet = parseInt(document.getElementById("bet").value) || 0;
+      const balanceInput = document.getElementById("balance");
+      let balance = parseInt(balanceInput.value) || 0;
+      
+
+      if (balance < bet) {
+        alert("မလုံလောက်တဲ့ balance ပါ!");
+        return;
+      }
+
+      balance -= bet;
+      balanceInput.value = balance;
+
+      const now = performance.now();
+      reels.forEach((reel, i) => {
+        reel.offset = Math.floor(Math.random() * symbolsPerReel);
+        reel.order = shuffleWithTailPriority();
+        reel.scrollPx = 0;
+        reel.spinStart = now + i * 300;
+        reel.spinDuration = 3000 + i * 600;
+        reel.spinning = true;
+      });
+      spinBtn.disabled = true;
+      requestAnimationFrame(animate);
+    }
+
+    function animate(time) {
+      scatterAnimTime = time;
+      let stillSpinning = false;
+      reels.forEach((reel) => {
+        if (!reel.spinning) return;
+        const elapsed = time - reel.spinStart;
+        if (elapsed < 0) {
+          stillSpinning = true;
+          return;
+        }
+        const t = Math.min(1, elapsed / reel.spinDuration);
+        const eased = easeOutQuad(1 - t);
+        reel.scrollPx = eased * symbolsPerReel * symbolSize * 4;
+        if (t >= 1) {
+          reel.spinning = false;
+          reel.scrollPx = 0;
+        } else {
+          stillSpinning = true;
+        }
+      });
+      drawReels();
+      if (stillSpinning) {
+        requestAnimationFrame(animate);
+      } else {
+        spinBtn.disabled = false;
+        checkScatterWin();
+        checkWinAmount(); // Add this line
+      }
+    }
+
+  function checkWinAmount() {
+  const targetSymbol = 13;
+  let count = 0;
+
+  // Count symbol 13 in all visible symbols
+  reels.forEach(reel => {
+    for (let i = 0; i < visibleCount; i++) {
+      const index = (reel.offset + i) % symbolsPerReel;
+      if (reel.order[index] === targetSymbol) {
+        count++;
+      }
+    }
+  });
+
+  // Get bet value from input
+  const betValue = parseInt(document.querySelector(".bet").value) || 0;
+
+  // Calculate win
+  const winAmount = count * betValue;
+  // Set to #winAmount input
+  document.getElementById("winAmount").value = winAmount;
+    //BalanceUpdateလုပ်
+   const balanceInput = document.getElementById("balance");
+  const currentBalance = parseInt(balanceInput.value) || 0;
+  balanceInput.value = currentBalance + winAmount;
+}
+  
+  function checkucalterwin() {
+  const targetSymbol = 13;
+  let count = 0;
+
+  // Count symbol 13 in all visible symbols
+  reels.forEach(reel => {
+    for (let i = 0; i < visibleCount; i++) {
+      const index = (reel.offset + i) % symbolsPerReel;
+      if (reel.order[index] === targetSymbol) {
+        count++;
+      }
+    }
+  });
+
+  // Get bet value from input
+  const betValue = parseInt(document.querySelector(".bet").value) || 0;
+    
+const perSymbolWin = 500; // ✅ fixed value per symbol
+  // Calculate win
+  const scalterWin = count * perSymbolWin;
+
+    const scalterWinInput = document.getElementById("scalterWin");
+  const currentScalterWin = parseInt(scalterWinInput.value) || 0;
+  scalterWinInput.value = currentScalterWin + scalterWin;
+
+  return scalterWin; // ✅ return value for later use
+    }
+
+  
+    function checkScatterWin() {
+  const scatterId = 22;
+  let scatterCount = 0;
+
+  reels.forEach(reel => {
+    for (let i = 0; i < visibleCount; i++) {
+      const index = (reel.offset + i) % symbolsPerReel;
+      if (reel.order[index] === scatterId) scatterCount++;
+    }
+  });
+
+  if (scatterCount >= 3) {
+    // ✅ Disable spin button
+    spinBtn.disabled = true;
+
+    // ✅ Show GIF
+    const gif = document.getElementById("gifContainer");
+    gif.style.display = "block";
+
+    // ✅ After 5 seconds: hide gif, update scalter, start auto-spin
+    setTimeout(() => {
+      gif.style.display = "none";
+
+      // ✅ Set scalter value to 10
+      const scalterInput = document.getElementById("scalter");
+      scalterInput.value = 10;
+
+      // ✅ Start auto spins
+      autoSpinScalter(10);
+    }, 5000);
+  }
+}
+function autoSpinScalter(times) {
+  document.getElementById("winAmount").value = 0;
+  let count = 0;
+  let scalterWin = 0; // ✅ accumulate here
+
+  function doAutoSpin() {
+    if (count >= times) {
+      const balanceInput = document.getElementById("balance");
+      const currentBalance = parseInt(balanceInput.value) || 0;
+    balanceInput.value = currentBalance + scalterWin;
+  // ✅ Reset scalterWin input to 0
+  document.getElementById("scalterWin").value = 0;
+      spinBtn.disabled = false; // ✅ enable spin button again
+      
+      return;
+    }
+  
+    // ✅ Reduce scalter value by 1
+    const scalterInput = document.getElementById("scalter");
+    let scalterValue = parseInt(scalterInput.value) || 0;
+    scalterInput.value = Math.max(0, scalterValue - 1);
+
+    // ✅ Start spin animation
+    const now = performance.now();
+    reels.forEach((reel, i) => {
+      reel.offset = Math.floor(Math.random() * symbolsPerReel);
+      reel.order = shuffleWithTailPriority();
+      reel.scrollPx = 0;
+      reel.spinStart = now + i * 300;
+      reel.spinDuration = 2000 + i * 600; // shorter spin time
+      reel.spinning = true;
+    });
+
+    requestAnimationFrame(function animateAutoSpin(time) {
+      scatterAnimTime = time;
+      let stillSpinning = false;
+
+      reels.forEach((reel) => {
+        if (!reel.spinning) return;
+        const elapsed = time - reel.spinStart;
+        if (elapsed < 0) {
+          stillSpinning = true;
+          return;
+        }
+        const t = Math.min(1, elapsed / reel.spinDuration);
+        const eased = easeOutQuad(1 - t);
+        reel.scrollPx = eased * symbolsPerReel * symbolSize * 4;
+        if (t >= 1) {
+          reel.spinning = false;
+          reel.scrollPx = 0;
+        } else {
+          stillSpinning = true;
+        }
+      });
+
+      drawReels();
+
+      if (stillSpinning) {
+        requestAnimationFrame(animateAutoSpin);
+      } else {
+scalterWin += checkucalterwin();
+
+        count++;
+        setTimeout(doAutoSpin, 900); // delay between auto spins
+      }
+    });
+  }
+// ✅ Start the first auto spin
+  doAutoSpin();
+}
+
+    function goFullAndLandscape() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      if (screen.orientation?.lock) {
+        screen.orientation.lock('landscape').catch(() => {
+          alert("Please rotate your phone manually to landscape.");
+        });
+      }
+    }
+
+  
+    spinBtn.onclick = spin;
+    sprite.onload = () => {
+      resizeCanvas();
+      initReels();
+      drawReels();
+    };
+  
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      drawReels();
+    });
+  
   </script>
 </body>
 </html>
